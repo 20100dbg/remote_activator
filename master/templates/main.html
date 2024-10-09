@@ -16,12 +16,7 @@
 
 
 <div class="line red">
-  <input type="checkbox" id="check-255" onchange="check_all(this.checked);" />
-  
-  <label for="check-255" class="text">
-    <span id="name-255">Sélection</span>
-  </label>
-
+  <button id="check-255" class="toggle" onclick="return selection_choice();">Tous</button>
   <span class="buttons">
     <img src="../static/wifi.png" width="45" onclick="return ping_selection();" />
     <img src="../static/bomb.png" width="45" onclick="return fire_selection();" />
@@ -52,6 +47,7 @@ function request_update() {
 socket.on("update", function(data) {
   update(data);
 });
+
 
 let dict_ieds = {};
 
@@ -92,18 +88,23 @@ function update(ieds)
   }
 }
 
+let selection_mode = 'Tous';
 
-function check_all(check) {
-    for (id in dict_ieds)
-      document.getElementById('check-' + id).checked = check
+function selection_choice() {
+  let btn = document.getElementById('check-255');
+
+  if (selection_mode == 'Tous') {
+    selection_mode = 'Sélection';
+  } else {
+    selection_mode = 'Tous'
+  }
+  btn.innerText = selection_mode;
 }
 
 function ping_selection() {
-  if (!document.getElementById('check-255').checked) {
+  if (selection_mode == 'Tous') {
     ping(255);
-  }
-  else
-  {
+  } else {
     for (id in dict_ieds) {
       if (document.getElementById('check-' + id).checked)
         ping(id);
@@ -112,11 +113,9 @@ function ping_selection() {
 }
 
 function fire_selection() {
-if (!document.getElementById('check-255').checked) {
+  if (selection_mode == 'Tous') {
     fire(255);
-  }
-  else
-  {
+  } else {
     for (id in dict_ieds) {
       if (document.getElementById('check-' + id).checked)
         fire(id);
@@ -145,7 +144,6 @@ function fire(id) {
 
 
 function show_loader(id) {
-  console.log('show_loader ' + id);
     document.getElementById('check-' + id).parentNode.classList.add('loader');
     setTimeout(function () {
       document.getElementById('check-' + id).parentNode.classList.remove('loader');
