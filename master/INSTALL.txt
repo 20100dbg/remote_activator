@@ -1,0 +1,118 @@
+https://raspap.com/
+https://docs.raspap.com/captive/
+https://github.com/RaspAP/raspap-webgui/issues/464
+https://medium.com/@chandan-sharma/powering-flask-with-websockets-ca9f5a097ad9
+
+
+- INSTALL GPIO
+
+MDP
+hostapd : admin / secret
+wifi : ChangeMe
+
+
+# wifi
+sudo cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf.bak
+sudo rm /etc/wpa_supplicant/wpa_supplicant.conf
+
+
+
+raspi-config
+- Localisation options > WLAN country
+
+
+# raspap
+curl -sL https://install.raspap.com | bash
+reboot
+
+
+# config
+définir le port de hostapd sur 8080 depuis l'appli web
+
+
+# configuration dns
+possiblement dans /etc/dnsmasq.conf
+de préférence dans /etc/dnsmasq.d/090_wlan0.conf
+
+interface=wlan0
+dhcp-range=10.3.141.50,10.3.141.255,255.255.255.0,12h
+dhcp-option=6,10.3.141.1
+no-resolv
+server=1.1.1.1
+address=/ied.boom /10.3.141.1
+
+
+
+# install webapp
+
+pip install flask
+pip install flask-socketio
+pip install gevent
+pip install gunicorn
+
+sudo apt install nginx
+
+
+/etc/nginx/nginx.conf
+dans la section http, ajouter
+
+server {
+    listen       80;
+    listen       [::]:80;
+    server_name  ied.boom;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://127.0.0.1:5000;
+    }
+
+    location /socket.io {
+        proxy_pass http://127.0.0.1:5000/socket.io;
+        proxy_redirect off;
+        proxy_buffering off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_hide_header Access-Control-Allow-Origin;
+    }
+}
+
+
+vérifier le fichier /etc/nginx/proxy_params
+
+
+sudo nano /etc/systemd/system/gunicorn.service
+
+[Unit]
+Description=gunicorn
+After=network.target
+
+[Service]
+User=marty
+WorkingDirectory=/home/marty/deto/
+ExecStart=/home/marty/deto/start.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+sudo systemctl enable gunicorn.service
+sudo systemctl daemon-reload
+
+
+
+nano /home/marty/deto/start.sh
+cd /home/marty/deto
+. .venv/bin/activate
+gunicorn --worker-class eventlet -w 1 app:app --bind 0.0.0.0:5000
+
+
+
+/etc/hosts
+10.3.141.1 ied.boom
+

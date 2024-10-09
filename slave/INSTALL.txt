@@ -1,0 +1,14 @@
+- INSTALL GPIO
+
+
+crontab -e
+@reboot sh /home/marty/deto/start.sh
+
+
+Utiliser deux batteries : une pour le pi, une pour alimenter la charge
+OU brancher la charge en USB sur le pi. Mais pas les deux sur la même batterie
+
+pin GPIO (numéros BCM !) :
+- 1 = VCC
+- 9 = GND
+- 11 = IN/CMD

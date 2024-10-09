@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- script src="/static/js/socket.io.js"></script -->
+    <link rel="stylesheet" href="../static/css/style.css" />
+    <link rel="icon" href="/static/favicon.ico" />
+    <title>Gestion IED</title>
+  </head>
+  <body>
+
+<div class="top" id="etat"></div>
+<div class="alert" role="alert" id="alert"></div>
+<div class="container" id="container">
+
+
+<div class="line red">
+  <input type="checkbox" id="check-all" onchange="check_all(this.checked);" />
+  
+  <label for="check-all" class="text">
+    <span id="name-all">Sélection</span>
+  </label>
+
+  <span class="buttons">
+    <img src="../static/wifi.png" width="45" onclick="return ping_selection();" />
+    <img src="../static/bomb.png" width="45" onclick="return fire_selection();" />
+  </span>
+</div>
+
+</div>
+
+
+<script type="text/javascript">
+
+const socket = io();
+
+socket.on("connect", () => {
+  update_etat(true);
+  //request_update(); //this one fails
+  request_update();
+});
+
+socket.on("disconnect", () => {
+  update_etat(false);
+});
+
+function request_update() {
+  socket.emit("update", function() { });
+}
+
+socket.on("update", function(data) {
+  update(data);
+});
+
+let dict_ieds = {};
+
+
+(function() {
+  setInterval(function () {
+
+    for (id in dict_ieds)
+    {
+      if (dict_ieds[id] != 0) {
+        x = Math.round((Date.now() - dict_ieds[id]) / 1000) + 's';
+        if (x > 999) x = 999;
+        x += 's'
+      }
+      else {
+        x = "N/A";
+      }
+      
+      set('ping', id, x);
+    }
+
+  }, 500);
+})();
+
+
+
+function update(ieds)
+{
+  for (const [id, value] of Object.entries(ieds))
+  {
+    if (!(id in dict_ieds)) add_ied(id);
+
+    dict_ieds[id] = ieds[id][3];
+    set('name', id, ieds[id][0]);
+
+    setActive(id, ieds[id][1]);
+
+    //dict_ied = { 'ping-ID' : id_timeout}    
+  }
+}
+
+
+function check_all(check) {
+    for (id in dict_ieds)
+      document.getElementById('check-' + id).checked = check
+}
+
+function ping_selection() {
+  if (document.getElementById('check-all').checked) {
+    ping(255);
+  }
+  else
+  {
+    for (id in dict_ieds) {
+      if (document.getElementById('check-' + id).checked)
+        ping(id);
+    }
+  }
+}
+
+function fire_selection() {
+if (document.getElementById('check-all').checked) {
+    fire(255);
+  }
+  else
+  {
+    for (id in dict_ieds) {
+      if (document.getElementById('check-' + id).checked)
+        fire(id);
+    }
+  }
+}
+
+function rename(id) {
+  let name = prompt("Saisir le nouveau nom : ");
+
+  if (name != null && name != "") {
+    socket.emit("name", {'id': id, 'name': name});
+  }
+}
+
+function ping(id) {
+  show_loader(id);
+  //socket.emit("ping", {'id': id, 'time': Date.now()});
+}
+
+function fire(id) {
+  show_loader(id);
+  //socket.emit("fire", {'id': id});
+}
+
+
+
+function show_loader(id) {
+  console.log('show_loader ' + id);
+  if (id != 255) 
+  {
+    document.getElementById('check-' + id).parentNode.classList.add('loader');
+    setTimeout(function () {
+      document.getElementById('check-' + id).parentNode.classList.remove('loader');
+    }, 2000);
+  }
+}
+
+function set(attr,id,value) {
+  document.getElementById(attr + '-' + id).innerText = value;
+}
+
+function setActive(id, isActive) {
+  document.getElementById('bomb-' + id).style.backgroundColor = (isActive) ? '#00FF00' : '#FF0000';
+}
+
+
+function update_etat(etat)
+{
+  let div_etat = document.getElementById('etat');
+
+  if (etat)
+  {
+    div_etat.classList.remove('red');
+    div_etat.classList.add('green');
+    div_etat.innerText = "Connecté"
+  }
+  else
+  {
+    div_etat.classList.remove('green');
+    div_etat.classList.add('red');
+    div_etat.innerText = "! Déconnecté !"
+  }
+}
+
+function add_ied(id)
+{
+  let ied_tpl = get_ied_tpl(id);
+  document.getElementById('container').innerHTML += ied_tpl;
+
+/*
+  let div = document.getElementById('name-' + id);
+
+  div.mouseup(function(){
+    clearTimeout(pressTimer);
+    return false;
+  });
+
+  div.mousedown(function(){
+    pressTimer = window.setTimeout(function() { rename(id); },1000);
+    return false; 
+  });
+  */
+}
+
+function get_ied_tpl(id)
+{
+  return '<div class="line">' +
+      '<input type="checkbox" id="check-'+ id +'" /> ' +
+      
+      '<label for="check-'+ id +'" class="text">' +
+        '<span id="name-'+ id +'">IED '+ id +'</span>' +
+        ' (<span id="ping-'+ id +'"></span>)' +
+      '</label>' +
+
+      '<span class="buttons">' +
+        '<img src="../static/wifi.png" id="wifi-'+ id +'" width="45" onclick="return ping(\''+ id +'\');" /> ' +
+        '<img src="../static/bomb.png" id="bomb-'+ id +'" width="45" onclick="return fire(\''+ id +'\');" />' +
+      '</span>' +
+    '</div>';
+
+}
+
+function pop_error(value) {
+  document.getElementById('alert').style = 'display: block';
+  document.getElementById('alert').innerText = value;
+
+  setTimeout(function () {
+    document.getElementById('alert').style = 'display: none';
+  }, 4000);
+}
+
+
+</script>
+
+  </body>
+</html>

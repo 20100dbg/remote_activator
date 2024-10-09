@@ -1,0 +1,33 @@
+### config GPIO
+guide : https://www.raspberrypi-france.fr/comment-utiliser-les-port-gpio-raspberry-pi/
+télécharger RPi.GPIO : https://pypi.org/project/RPi.GPIO/
+
+
+
+Installer les fichiers de dev
+```
+dpkg *.deb
+```
+
+```
+mkdir deto
+cd deto
+python -m venv .venv
+. .venv/bin/activate
+```
+
+Installer la lib pyserial
+```
+cp ~/pyserial.tar.gz ./pyserial.tar.gz
+tar -xvf pyserial.tar.gz
+cd pyserial
+python setup.py install
+```
+
+Installer la lib RPi.GPIO
+```
+cp ~/RPi.GPIO.tar.gz ./RPi.GPIO.tar.gz
+tar -xvf RPi.GPIO.tar.gz
+cd RPi.GPIO
+python setup.py install
+```
