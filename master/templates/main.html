@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <!-- script src="/static/js/socket.io.js"></script -->
-    <link rel="stylesheet" href="../static/css/style.css" />
+    <script src="/static/js/socket.io.js"></script>
+    <link rel="stylesheet" href="/static/css/style.css" />
     <link rel="icon" href="/static/favicon.ico" />
     <title>Gestion IED</title>
   </head>
@@ -16,10 +16,10 @@
 
 
 <div class="line red">
-  <input type="checkbox" id="check-all" onchange="check_all(this.checked);" />
+  <input type="checkbox" id="check-255" onchange="check_all(this.checked);" />
   
-  <label for="check-all" class="text">
-    <span id="name-all">Sélection</span>
+  <label for="check-255" class="text">
+    <span id="name-255">Sélection</span>
   </label>
 
   <span class="buttons">
@@ -36,8 +36,8 @@
 const socket = io();
 
 socket.on("connect", () => {
-  update_etat(true);
   //request_update(); //this one fails
+  update_etat(true);
   request_update();
 });
 
@@ -62,7 +62,7 @@ let dict_ieds = {};
     for (id in dict_ieds)
     {
       if (dict_ieds[id] != 0) {
-        x = Math.round((Date.now() - dict_ieds[id]) / 1000) + 's';
+        x = Math.round((Date.now() - dict_ieds[id]) / 1000);
         if (x > 999) x = 999;
         x += 's'
       }
@@ -86,7 +86,6 @@ function update(ieds)
 
     dict_ieds[id] = ieds[id][3];
     set('name', id, ieds[id][0]);
-
     setActive(id, ieds[id][1]);
 
     //dict_ied = { 'ping-ID' : id_timeout}    
@@ -100,7 +99,7 @@ function check_all(check) {
 }
 
 function ping_selection() {
-  if (document.getElementById('check-all').checked) {
+  if (!document.getElementById('check-255').checked) {
     ping(255);
   }
   else
@@ -113,7 +112,7 @@ function ping_selection() {
 }
 
 function fire_selection() {
-if (document.getElementById('check-all').checked) {
+if (!document.getElementById('check-255').checked) {
     fire(255);
   }
   else
@@ -135,25 +134,22 @@ function rename(id) {
 
 function ping(id) {
   show_loader(id);
-  //socket.emit("ping", {'id': id, 'time': Date.now()});
+  socket.emit("ping", {'id': id, 'time': Date.now()});
 }
 
 function fire(id) {
   show_loader(id);
-  //socket.emit("fire", {'id': id});
+  socket.emit("fire", {'id': id});
 }
 
 
 
 function show_loader(id) {
   console.log('show_loader ' + id);
-  if (id != 255) 
-  {
     document.getElementById('check-' + id).parentNode.classList.add('loader');
     setTimeout(function () {
       document.getElementById('check-' + id).parentNode.classList.remove('loader');
     }, 2000);
-  }
 }
 
 function set(attr,id,value) {
@@ -187,20 +183,6 @@ function add_ied(id)
 {
   let ied_tpl = get_ied_tpl(id);
   document.getElementById('container').innerHTML += ied_tpl;
-
-/*
-  let div = document.getElementById('name-' + id);
-
-  div.mouseup(function(){
-    clearTimeout(pressTimer);
-    return false;
-  });
-
-  div.mousedown(function(){
-    pressTimer = window.setTimeout(function() { rename(id); },1000);
-    return false; 
-  });
-  */
 }
 
 function get_ied_tpl(id)
