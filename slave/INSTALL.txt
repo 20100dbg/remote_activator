@@ -1,14 +1,60 @@
-- INSTALL GPIO
-
-
-crontab -e
-@reboot sh /home/marty/deto/start.sh
-
-
-Utiliser deux batteries : une pour le pi, une pour alimenter la charge
-OU brancher la charge en USB sur le pi. Mais pas les deux sur la même batterie
-
 pin GPIO (numéros BCM !) :
 - 1 = VCC
 - 9 = GND
 - 11 = IN/CMD
+
+
+
+0 -Copier le code de l'application sur le rpi
+scp .\deto.zip rpi@169.254.72.10:/home/rpi
+
+
+1 - Installation de l'environnement
+
+# Creation du dossier
+mkdir deto
+cd deto
+python -m venv .venv
+source .venv/bin/activate
+
+# copier le code dans ~/deto
+
+chmod +x start.sh
+
+
+2 - Installation pyserial + rpi.gpio (pour utiliser LoRa et le relais)
+
+### voir le guide INSTALL_gpio.txt
+
+
+
+3 - création du service slave
+
+sudo nano /etc/systemd/system/slave.service
+
+######################
+
+[Unit]
+Description=slave
+After=network.target
+
+[Service]
+User=rpi
+WorkingDirectory=/home/rpi/deto/
+ExecStart=/home/rpi/deto/start.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+######################
+
+
+
+sudo systemctl enable slave.service
+sudo systemctl daemon-reload
+
+sudo reboot
+
+
+

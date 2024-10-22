@@ -4,62 +4,68 @@ https://github.com/RaspAP/raspap-webgui/issues/464
 https://medium.com/@chandan-sharma/powering-flask-with-websockets-ca9f5a097ad9
 
 
-- INSTALL GPIO
-
-MDP
-hostapd : admin / secret
-wifi : ChangeMe
+0 -Copier le code de l'application sur le rpi
+scp .\deto.zip rpi@169.254.72.10:/home/rpi
 
 
-# wifi
-sudo cp /etc/wpa_supplicant/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf.bak
-sudo rm /etc/wpa_supplicant/wpa_supplicant.conf
+1 - connexion au wifi
+sudo nmcli device wifi connect "Couscous" password "password"
+
+
+2 - Installation de l'environnement
+
+# Creation du dossier
+mkdir deto
+cd deto
+python -m venv .venv
+source .venv/bin/activate
+
+# copier le code dans ~/deto
+
+chmod +x gunicorn.sh startap.sh
+
+
+3 - Installation pyserial + rpi.gpio (pour utiliser LoRa)
+
+### voir le guide INSTALL_gpio.txt
+
+
+4 - Installation serveur web/python
+
+pip install flask flask-socketio gevent gunicorn
+
+sudo apt update
+sudo apt install nginx hostapd dnsmasq
 
 
 
-raspi-config
-- Localisation options > WLAN country
+5a - configuration dns
 
+sudo nano /etc/dnsmasq.d/090_wlan0.conf
 
-# raspap
-curl -sL https://install.raspap.com | bash
-reboot
-
-
-# config
-définir le port de hostapd sur 8080 depuis l'appli web
-
-
-# configuration dns
-possiblement dans /etc/dnsmasq.conf
-de préférence dans /etc/dnsmasq.d/090_wlan0.conf
+######################
 
 interface=wlan0
 dhcp-range=10.3.141.50,10.3.141.255,255.255.255.0,12h
 dhcp-option=6,10.3.141.1
 no-resolv
 server=1.1.1.1
-address=/ied.boom /10.3.141.1
+address=/ied.com /10.3.141.1
+
+######################
 
 
+5b - configuration nginx
 
-# install webapp
+sudo nano /etc/nginx/nginx.conf
+dans la section http :
 
-pip install flask
-pip install flask-socketio
-pip install gevent
-pip install gunicorn
-
-sudo apt install nginx
-
-
-/etc/nginx/nginx.conf
-dans la section http, ajouter
+######################
 
 server {
     listen       80;
     listen       [::]:80;
-    server_name  ied.boom;
+    server_name  ied.com;
 
     location / {
         include proxy_params;
@@ -80,39 +86,115 @@ server {
     }
 }
 
+######################
 
-vérifier le fichier /etc/nginx/proxy_params
 
+
+5c - création du service gunicorn
 
 sudo nano /etc/systemd/system/gunicorn.service
+
+######################
 
 [Unit]
 Description=gunicorn
 After=network.target
 
 [Service]
-User=marty
-WorkingDirectory=/home/marty/deto/
-ExecStart=/home/marty/deto/start.sh
+User=rpi
+WorkingDirectory=/home/rpi/deto/
+ExecStart=/home/rpi/deto/gunicorn.sh
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 
+######################
 
 
+5d - création du service startap
+
+sudo nano /etc/systemd/system/startap.service
+
+######################
+
+[Unit]
+Description=startap
+After=network.target
+
+[Service]
+User=rpi
+WorkingDirectory=/home/rpi/deto/
+ExecStart=/home/rpi/deto/startap.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+
+######################
+
+
+
+5e - ajout de l'entrée /etc/hosts
+
+sudo nano /etc/hosts
+
+######################
+
+10.3.141.1 ied.com
+
+######################
+
+
+
+
+5f - configuration hostapd
+
+sudo nano /etc/hostapd/hostapd.conf
+
+######################
+
+interface=wlan0
+driver=nl80211
+ssid=ied
+hw_mode=g
+channel=6
+beacon_int=100
+dtim_period=2
+max_num_sta=255
+rts_threshold=2347
+fragm_threshold=2346
+
+#auth_algs=0
+wpa=2
+wpa_passphrase=Azerty123+
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=CCMP
+rsn_pairwise=CCMP
+
+######################
+
+
+
+5g - configuration IP
+sudo nano /etc/network/interfaces.d/00-static
+
+######################
+
+auto wlan0
+iface wlan0 inet static
+address 10.3.141.1
+netmask 255.255.255.0
+
+######################
+
+
+
+6 - activation des services
+
+sudo systemctl enable startap.service
 sudo systemctl enable gunicorn.service
 sudo systemctl daemon-reload
 
-
-
-nano /home/marty/deto/start.sh
-cd /home/marty/deto
-. .venv/bin/activate
-gunicorn --worker-class eventlet -w 1 app:app --bind 0.0.0.0:5000
-
-
-
-/etc/hosts
-10.3.141.1 ied.boom
-
+7 - reboot
+sudo reboot

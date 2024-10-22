@@ -16,10 +16,10 @@
 
 
 <div class="line red">
-  <button id="check-255" class="toggle" onclick="return selection_choice();">Tous</button>
-  <span class="buttons">
-    <img src="../static/wifi.png" width="45" onclick="return ping_selection();" />
-    <img src="../static/bomb.png" width="45" onclick="return fire_selection();" />
+  <!--button id="check-255" class="toggle" onclick="return selection_choice();">Tous</button-->
+  <span class="buttons" id="check-255">
+    <img src="../static/wifi.png" width="45" onclick="return scan();" />
+    <img src="../static/bomb.png" width="45" onclick="return fire_all();" />
   </span>
 </div>
 
@@ -101,6 +101,15 @@ function selection_choice() {
   btn.innerText = selection_mode;
 }
 
+function scan() {
+  socket.emit("scan", {'time': Date.now()});
+}
+
+function fire_all() {
+  fire(255);
+}
+
+/*
 function ping_selection() {
   if (selection_mode == 'Tous') {
     ping(255);
@@ -111,7 +120,9 @@ function ping_selection() {
     }
   }
 }
+*/
 
+/*
 function fire_selection() {
   if (selection_mode == 'Tous') {
     fire(255);
@@ -122,6 +133,7 @@ function fire_selection() {
     }
   }
 }
+*/
 
 function rename(id) {
   let name = prompt("Saisir le nouveau nom : ");
@@ -132,13 +144,13 @@ function rename(id) {
 }
 
 function ping(id) {
-  show_loader(id);
   socket.emit("ping", {'id': id, 'time': Date.now()});
+  show_loader(id);
 }
 
 function fire(id) {
-  show_loader(id);
   socket.emit("fire", {'id': id});
+  show_loader(id);
 }
 
 

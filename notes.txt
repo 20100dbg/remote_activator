@@ -1,0 +1,6 @@
+V2 :
+- ajouter l'état du deto dans le PONG
+- les clients ne renvoient pas l'ACK du FIRE_ON / FIRE_OFF ?
+- le controleur suppose l'état des IED ?
+- utiliser une pin GPIO pour la source de courant
+- incorporer la batterie dans le boitier / via une attache ?

@@ -2,7 +2,7 @@ import gevent
 import sx126x
 import threading
 import time
-from flask import Flask, request
+from flask import Flask, request, make_response
 from flask_socketio import SocketIO, emit
 from signal import signal, SIGINT
 
@@ -42,20 +42,24 @@ def fire(params):
     update()
 
 
+@socketio.on('scan')
+def scan(params):
+    global ping_global
+    
+    _time = int(params['time'])
+    ping_global = _time
+    
+    for x in range(1, 5):
+        send(x, 'PING')
+        time.sleep(4)
+
+
 @socketio.on('ping')
 def ping(params):
     _id = int(params['id'])
     _time = int(params['time'])
 
-    if _id == 255:
-        global ping_global
-        ping_global = _time
-        
-        for x in dict_ied:
-            dict_ied[x][2] = _time
-    else:
-        dict_ied[_id][2] = _time
-    
+    dict_ied[_id][2] = _time
     send(_id, 'PING')
 
 
@@ -108,6 +112,7 @@ def send(addr, msgid):
     m = msg[msgid].to_bytes(1, 'big')
     
     lora.sendraw(addr + m)
+    time.sleep(0.01)
 
 
 def getmsgkey(msgvalue):

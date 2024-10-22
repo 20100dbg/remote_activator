@@ -10,7 +10,7 @@ def handler(signal_received, frame):
 
 def activer_relais(on):
     global pin_relais    
-    GPIO.output(pin_relais, not on)
+    GPIO.output(pin_relais, on)
 
 def setArmed(state):
     isArmed = state
@@ -36,11 +36,11 @@ def listener():
             addr = int.from_bytes(data[0:1])
             msgvalue = int.from_bytes(data[1:2])
 
-            print("to :", addr, " - MSG :", getmsgkey(msgvalue))
+            #print("to :", addr, " - MSG :", getmsgkey(msgvalue))
 
             if addr != addr_local and addr != 255: # 255 = broadcast
                 continue
-
+            
             if msg["PING"] == msgvalue:
                 send(addr_local, msg["PONG"])
             elif msg["FIRE_ON"] == msgvalue:
@@ -50,7 +50,7 @@ def listener():
                 activer_relais(False)
                 send(addr_local, msg["ACK_FIRE_OFF"])
 
-        time.sleep(0.01)
+        time.sleep(0.001)
 
 
 def main():
@@ -66,7 +66,7 @@ def main():
     pin_relais = 17
 
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(pin_relais, GPIO.OUT, initial=GPIO.HIGH)
+    GPIO.setup(pin_relais, GPIO.OUT, initial=GPIO.LOW)
 
     #initialize lora
     global lora
@@ -75,6 +75,7 @@ def main():
 
     lora = sx126x.sx126x(channel=18,address=addr_local,network=0, txPower='22', airDataRate='9.6', packetSize='32')
     listener()
+
 
 if __name__ == '__main__':
     

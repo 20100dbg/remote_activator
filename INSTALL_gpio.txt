@@ -3,18 +3,20 @@ guide : https://www.raspberrypi-france.fr/comment-utiliser-les-port-gpio-raspber
 télécharger RPi.GPIO : https://pypi.org/project/RPi.GPIO/
 
 
-
 Installer les fichiers de dev
 ```
-dpkg *.deb
+sudo dpkg -i *.deb
 ```
 
+
+!!! Pour installer les lib, il faut être dans un venv !!!
+
+Créer + activer le venv :
 ```
-mkdir deto
-cd deto
 python -m venv .venv
-. .venv/bin/activate
+source .venv/bin/activate
 ```
+
 
 Installer la lib pyserial
 ```
@@ -23,6 +25,7 @@ tar -xvf pyserial.tar.gz
 cd pyserial
 python setup.py install
 ```
+
 
 Installer la lib RPi.GPIO
 ```

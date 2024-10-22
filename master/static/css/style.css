@@ -16,6 +16,7 @@
 
   .line.red {
     background-color: #FF1111;
+    height: 35px;
   }
 
   .buttons {
@@ -45,6 +46,8 @@
 .red {
   background-color: #FF0000;
 }
+
+
 
 .alert {
   position: absolute;
