@@ -14,24 +14,22 @@
 <div class="alert" role="alert" id="alert"></div>
 <div class="container" id="container">
 
-
 <div class="line red">
-  <!--button id="check-255" class="toggle" onclick="return selection_choice();">Tous</button-->
-  <span class="buttons" id="check-255">
-    <img src="../static/wifi.png" width="45" onclick="return scan();" />
-    <img src="../static/bomb.png" width="45" onclick="return fire_all();" />
+  <button id="check-255" class="toggle" onclick="return selection_choice();">Tous</button>
+  <span class="buttons">
+    <img src="../static/wifi.png" width="45" onclick="return ping_selection();" style="margin-right: 10px;" />
+    <img src="../static/bomb.png" width="45" onclick="return fire_selection();" />
   </span>
 </div>
 
 </div>
 
-
 <script type="text/javascript">
 
+const nb_ied = {{nb_ied}};
 const socket = io();
 
 socket.on("connect", () => {
-  //request_update(); //this one fails
   update_etat(true);
   request_update();
 });
@@ -51,10 +49,8 @@ socket.on("update", function(data) {
 
 let dict_ieds = {};
 
-
 (function() {
   setInterval(function () {
-
     for (id in dict_ieds)
     {
       if (dict_ieds[id] != 0) {
@@ -62,16 +58,11 @@ let dict_ieds = {};
         if (x > 999) x = 999;
         x += 's'
       }
-      else {
-        x = "N/A";
-      }
-      
+      else { x = "N/A"; }
       set('ping', id, x);
     }
-
-  }, 500);
+  }, 100);
 })();
-
 
 
 function update(ieds)
@@ -79,12 +70,7 @@ function update(ieds)
   for (const [id, value] of Object.entries(ieds))
   {
     if (!(id in dict_ieds)) add_ied(id);
-
-    dict_ieds[id] = ieds[id][3];
-    set('name', id, ieds[id][0]);
-    setActive(id, ieds[id][1]);
-
-    //dict_ied = { 'ping-ID' : id_timeout}    
+    dict_ieds[id] = ieds[id][2];
   }
 }
 
@@ -93,81 +79,72 @@ let selection_mode = 'Tous';
 function selection_choice() {
   let btn = document.getElementById('check-255');
 
-  if (selection_mode == 'Tous') {
-    selection_mode = 'Sélection';
-  } else {
-    selection_mode = 'Tous'
-  }
+  if (selection_mode == 'Tous') { selection_mode = 'Sélection'; } 
+  else { selection_mode = 'Tous' }
   btn.innerText = selection_mode;
 }
 
-function scan() {
-  socket.emit("scan", {'time': Date.now()});
-}
-
-function fire_all() {
-  fire(255);
-}
-
-/*
-function ping_selection() {
+function ping_selection()
+{
   if (selection_mode == 'Tous') {
-    ping(255);
-  } else {
+    socket.emit("ping", {'id': [255], 'time': Date.now()});
+    duree = nb_ied * 3;
+  }
+  else
+  {
+    tab = [];
+
     for (id in dict_ieds) {
       if (document.getElementById('check-' + id).checked)
-        ping(id);
+        tab.push(id)
     }
+    ping(tab)
+    duree = tab.length * 1.5;
   }
+  show_loader(255, duree);
 }
-*/
 
-/*
-function fire_selection() {
+
+function fire_selection()
+{
   if (selection_mode == 'Tous') {
-    fire(255);
-  } else {
+    fire([255]);
+  }
+  else
+  {
+    tab = [];
+
     for (id in dict_ieds) {
       if (document.getElementById('check-' + id).checked)
-        fire(id);
+        tab.push(id)
     }
+    fire(tab)
   }
+  show_loader(255);
 }
-*/
 
-function rename(id) {
-  let name = prompt("Saisir le nouveau nom : ");
-
-  if (name != null && name != "") {
-    socket.emit("name", {'id': id, 'name': name});
-  }
-}
 
 function ping(id) {
   socket.emit("ping", {'id': id, 'time': Date.now()});
-  show_loader(id);
 }
 
 function fire(id) {
   socket.emit("fire", {'id': id});
-  show_loader(id);
 }
 
 
-
-function show_loader(id) {
+function show_loader(id, duree = 1.5) {
     document.getElementById('check-' + id).parentNode.classList.add('loader');
+    document.getElementById('check-' + id).parentNode.style.animationDuration = duree + 's';
+    document.getElementById('check-' + id).parentNode.style.WebkitAnimationDuration = duree + 's';
+
     setTimeout(function () {
       document.getElementById('check-' + id).parentNode.classList.remove('loader');
-    }, 2000);
+    }, duree * 1000);
 }
 
 function set(attr,id,value) {
   document.getElementById(attr + '-' + id).innerText = value;
-}
-
-function setActive(id, isActive) {
-  document.getElementById('bomb-' + id).style.backgroundColor = (isActive) ? '#00FF00' : '#FF0000';
 }
 
 
@@ -179,20 +156,23 @@ function update_etat(etat)
   {
     div_etat.classList.remove('red');
     div_etat.classList.add('green');
-    div_etat.innerText = "Connecté"
+    div_etat.innerText = "Wifi connecté"
   }
   else
   {
     div_etat.classList.remove('green');
     div_etat.classList.add('red');
-    div_etat.innerText = "! Déconnecté !"
+    div_etat.innerText = "! Wifi déconnecté !"
   }
 }
 
 function add_ied(id)
 {
-  let ied_tpl = get_ied_tpl(id);
-  document.getElementById('container').innerHTML += ied_tpl;
+  const tpl = document.createElement('template');
+  tpl.innerHTML = get_ied_tpl(id);
+
+  let container = document.getElementById('container');
+  container.appendChild(tpl.content.firstChild);
 }
 
 function get_ied_tpl(id)
@@ -206,11 +186,10 @@ function get_ied_tpl(id)
       '</label>' +
 
       '<span class="buttons">' +
-        '<img src="../static/wifi.png" id="wifi-'+ id +'" width="45" onclick="return ping(\''+ id +'\');" /> ' +
-        '<img src="../static/bomb.png" id="bomb-'+ id +'" width="45" onclick="return fire(\''+ id +'\');" />' +
+        '<img src="../static/wifi.png" width="45" onclick="show_loader(\''+ id +'\'); ping([\''+ id +'\']);" style="margin-right: 10px;" /> ' +
+        '<img src="../static/bomb.png" width="45" onclick="show_loader(\''+ id +'\'); fire([\''+ id +'\']);" />' +
       '</span>' +
     '</div>';
-
 }
 
 function pop_error(value) {

@@ -1,52 +1,52 @@
-  .container {
-    margin-top: 30px;
-    margin-right: -5px;
-    margin-left: -5px;
-  }
+.container {
+  margin-top: 30px;
+  margin-right: -5px;
+  margin-left: -5px;
+}
 
-  .line {
-    font-size: 18px;
-    font-weight: bold;      
+.line {
+  font-size: 18px;
+  font-weight: bold;      
 
-    padding: 10px 5px;
-    background-color: #CCCCCC;
-    margin: 10px 5px;
-  }
-  
+  padding: 10px 5px;
+  background-color: #CCCCCC;
+  margin: 10px 0px;
+}
 
-  .line.red {
-    background-color: #FF1111;
-    height: 35px;
-  }
 
-  .buttons {
-    float: right;
-    margin-top: -5px;
-  }
+.line.red {
+  background-color: #FF1111;
+  height: 35px;
+}
 
-  .text {
-    vertical-align: super;
-  }
+.buttons {
+  float: right;
+  margin-top: -5px;
+}
 
-  .toggle {
-    height: 35px;
-    width: 100px;
-    font-size: 16px;
-    font-weight: bold;
-  }
+.text {
+  vertical-align: super;
+}
 
-  img {
-    border: 1px solid #000000;
-  }
+.toggle {
+  height: 35px;
+  width: 100px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+img {
+  border: 1px solid #000000;
+}
 
 
 .green {
   background-color: #00FF00;
 }
+
 .red {
   background-color: #FF0000;
 }
-
 
 
 .alert {
@@ -84,9 +84,10 @@ input[type='checkbox'] {
 
 
 .loader {
-background: linear-gradient(currentColor 0 0) 0 100%/0% 3px no-repeat;
-background-color: #CCCCCC;
-animation: load 2s linear;
+  background: linear-gradient(currentColor 0 0) 0 100%/0% 3px no-repeat;
+  background-color: #CCCCCC;
+  animation: load 0s linear;
 }
+
 
 @keyframes load {to{background-size: 100% 3px}}
