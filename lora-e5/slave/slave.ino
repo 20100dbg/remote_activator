@@ -18,7 +18,7 @@ static const Module::RfSwitchMode_t rfswitch_table[] = {
 
 static const int max_size = 256;
 byte serial_buffer[max_size];
-static const int local_addr = 2;
+static const int local_addr = 3;
 
 #define MSG_PING 1
 #define MSG_PING_ACK 2
@@ -90,12 +90,12 @@ void setup() {
   radio.setRfSwitchTable(rfswitch_pins, rfswitch_table);
 
 
-  float freq = 868.0; //150-960mhz
-  float bw = 125.0; //125,250,500
-  uint8_t sf = 12; //7,8,9,10,11,12
-  uint8_t cr = 5; //5,6,7,8
+  float freq = 495.5; //150-960mhz
+  float bw = 250.0; //125,250,500
+  uint8_t sf = 10; //7,8,9,10,11,12
+  uint8_t cr = 6; //5,6,7,8
   uint8_t syncWord = RADIOLIB_SX126X_SYNC_WORD_PRIVATE;
-  int8_t power = 10; //22, 17, 14, 10
+  int8_t power = 22; //22, 17, 14, 10
   uint16_t preambleLength = 8;
 
 
